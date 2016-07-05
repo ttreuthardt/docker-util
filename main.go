@@ -21,6 +21,10 @@ func (c *Config) addEnvVar(envVarName string) {
 	c.Envvars = append(c.Envvars, envVarName)
 }
 
+func (c *Config) addTemplate(template string) {
+	c.Templates = append(c.Templates, template)
+}
+
 func NewContext() *Context {
 	return &Context{Env: make(map[string]string)}
 }
@@ -40,7 +44,7 @@ func populateContext(ctx *Context, config Config) {
 	for _, envVarName := range config.Envvars {
 		value := os.Getenv(envVarName)
 		ctx.Env[envVarName] = value
-		log.Printf("%s=%s", envVarName, value)
+		//log.Printf("%s=%s", envVarName, value)
 	}
 }
 

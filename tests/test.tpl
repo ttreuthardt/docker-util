@@ -1,0 +1,1 @@
+my template used the env var HOME here ->> {{ .Env.HOME }}

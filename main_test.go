@@ -13,9 +13,18 @@ func TestEnvVarPopulation(t *testing.T) {
 	populateContext(ctx, config)
 
 	if len(ctx.Env["HOME"]) == 0 {
-		t.Fatalf("test issue with '%s'", ctx.Env["HOME"])
-	} else {
-		t.Logf("env var HOME set to '%s'", ctx.Env["HOME"])
+		t.Fatalf("test issue with '%s'\n", ctx.Env["HOME"])
 	}
-
 }
+
+func TestTemplate(t *testing.T) {
+	config := Config{}
+	config.addEnvVar("HOME")
+	config.addTemplate("./tests/test.tpl")
+	ctx := NewContext()
+
+	populateContext(ctx, config)
+
+	handleTemplate("./tests/test.tpl", "", ctx)
+}
+
