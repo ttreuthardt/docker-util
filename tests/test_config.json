@@ -1,0 +1,21 @@
+{
+  "envvars": [
+    "HOME",
+    "FOOBAR",
+    "TEST"
+  ],
+  "templates": [
+    {
+      "templatePath": "/templates/test.tpl",
+      "destPath": "/dest/tpl1",
+      "fileMode": "0777",
+      "dirMode": "0777",
+      "owner": "root",
+      "group": "root"
+    },
+    {
+      "templatePath": "/templates/test.tpl",
+      "destPath": "/dest/tpl2"
+    }
+  ]
+}

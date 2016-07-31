@@ -1,0 +1,12 @@
+{
+  "envvars": [
+    "MY_TEST_VAR"
+  ],
+  "templates": [
+    {
+      "templatePath": "./tests/test.tpl",
+      "destPath": "./tests/dest/mytemplate.txt",
+      "fileMode": "0700"
+    }
+  ]
+}
