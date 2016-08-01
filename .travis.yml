@@ -1,6 +1,14 @@
 language: go
 
+gobuild_args: --ldflags '-extldflags "-static"'
+
+env:
+  global:
+    - GOARCH=amd64
+    - GOOS=linux
+    - GO15VENDOREXPERIMENT=1
+    - GO_FOR_RELEASE=1.6.3
+
 go:
   - 1.5
   - 1.6
-  - tip
