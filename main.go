@@ -141,7 +141,8 @@ func handleOwnerAndGroup(file *os.File, template Template) error {
 
 	currentUser, err := user.Current()
 	if err != nil {
-		return fmt.Errorf("Could not lookup current user, error: %v", err)
+		log.Printf("Could not lookup current user we are probably running in a scratch image, skipping chown, error: %v", err)
+		return nil
 	}
 
 	userId = currentUser.Uid
@@ -157,7 +158,7 @@ func handleOwnerAndGroup(file *os.File, template Template) error {
 	}
 
 	if template.Group != "" {
-		group, err := lookupGroupByName(template.Group)
+		group, err := LookupGroupByName(template.Group)
 		if err == nil {
 			groupId = group.Gid
 		} else {

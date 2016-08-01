@@ -7,12 +7,12 @@ import (
 
 func TestLookupGroup(t *testing.T) {
 	currentUser, _ := user.Current()
-	groupById, err := lookupGroupById(currentUser.Gid)
+	groupById, err := LookupGroupById(currentUser.Gid)
 	if err != nil {
 		t.Error(err.Error())
 	}
 
-	groupByName, err := lookupGroupByName(groupById.Name)
+	groupByName, err := LookupGroupByName(groupById.Name)
 	if err != nil {
 		t.Error(err.Error())
 	}

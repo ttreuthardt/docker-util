@@ -8,7 +8,7 @@ import (
 func TestReadConfigFile(t *testing.T) {
 	config, err := readConfig("tests/test_config.json")
 	if err != nil {
-		t.Error("readConfig, %v", err)
+		t.Errorf("readConfig, %v", err)
 	}
 
 	if len(config.Envvars) != 3 {
@@ -29,7 +29,7 @@ func TestReadConfigFile(t *testing.T) {
 
 		if strings.HasSuffix(tpl.DestPath, "tpl2") {
 			if tpl.FileMode != "" {
-				t.Errorf("file mode for tpl2 is not as expected %i", tpl.FileMode)
+				t.Errorf("file mode for tpl2 is not as expected %v", tpl.FileMode)
 			}
 		}
 

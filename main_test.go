@@ -54,7 +54,7 @@ func TestTemplate(t *testing.T) {
 	currentGroup, err := lookupGroupById(currentUser.Gid)
 
 	config.addTemplate("./tests/test.tpl", testTplPath1, currentUser.Username, currentGroup.Name, "")
-	config.addTemplate("./tests/test.tpl", testTplPath2, currentUser.Username, currentGroup.Name, "0500")
+	config.addTemplate("./tests/test.tpl", testTplPath2, currentUser.Username, currentGroup.Name, "0600")
 	ctx, err := newContext(&config)
 	if err != nil {
 		t.Errorf("newContext error: %v", err)
@@ -67,7 +67,7 @@ func TestTemplate(t *testing.T) {
 
 	assertFileExistsAndContains(testTplPath1, envVarValue, t)
 	assertFileExistsAndContains(testTplPath2, envVarValue, t)
-	assertFileMode(testTplPath2, 0500, t)
+	assertFileMode(testTplPath2, 0600, t)
 }
 
 func TestMyMain(t *testing.T) {
@@ -76,7 +76,7 @@ func TestMyMain(t *testing.T) {
 
 	envVarValue := "foobar"
 	os.Setenv("MY_TEST_VAR", envVarValue)
-	os.Args[1] = "-config=tests/config.json"
+	os.Args = append(os.Args, "-config=tests/config.json")
 
 	main()
 
@@ -90,11 +90,11 @@ func assertFileExistsAndContains(file, content string, t *testing.T) {
 	} else {
 		b, err := ioutil.ReadFile(file)
 		if err != nil {
-			t.Error("file %s could not be read, error: %v", file, err)
+			t.Errorf("file %s could not be read, error: %v", file, err)
 		}
-		content := string(b)
-		if !strings.Contains(content, content) {
-			t.Error("File %s does not contain ", file, content)
+		fileContent := string(b)
+		if !strings.Contains(fileContent, content) {
+			t.Errorf("File %s does not contain %s", file, content)
 		}
 	}
 }
