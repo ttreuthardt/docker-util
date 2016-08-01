@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/ttreuthardt/docker-util.svg?branch=master)](https://travis-ci.org/ttreuthardt/docker-util)
+
 # docker-util
 
 Utility for generating simple config files at container startup.
