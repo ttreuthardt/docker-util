@@ -4,7 +4,7 @@ env:
   global:
   - GOARCH=amd64
   - GOOS=linux
-  - GO_FOR_RELEASE=1.6.3
+
 go:
 - 1.5
 - 1.6
@@ -24,3 +24,4 @@ deploy:
   skip_cleanup: true
   on:
     tags: true
+    go: 1.6
