@@ -1,14 +1,26 @@
 language: go
-
 gobuild_args: --ldflags '-extldflags "-static"'
-
 env:
   global:
-    - GOARCH=amd64
-    - GOOS=linux
-    - GO15VENDOREXPERIMENT=1
-    - GO_FOR_RELEASE=1.6.3
-
+  - GOARCH=amd64
+  - GOOS=linux
+  - GO_FOR_RELEASE=1.6.3
 go:
-  - 1.5
-  - 1.6
+- 1.5
+- 1.6
+
+script:
+  - go test -v --ldflags '-extldflags "-static"' ./...
+  - go build -o docker-util --ldflags '-extldflags "-static"' ./...
+  - sha256sum docker-utl > docker-util.sha256
+
+deploy:
+  provider: releases
+  api_key:
+    secure: PQ9ESiaM+JIxSZB7LkY4OQkZeAEzl7sP3utRC/uVQshPmmnUAeyponUhqwdOBJHcfet3sMsBfqa1Jq5G04gg4eEbUYwEcZyzjS70uGh7/64yMDJHWouYzHq8hATk4p3FfE9F2P2Fd6NDjHqS48UhcXJ3q6VvpZksKrbN2L728wgMDWgk9CLKqVnI4gDWST0Q3O+EutcWTUjPyQn5pdDZmnUnyMpwksnr28Y2sQiFa7ifVyzYdquJrIplIOtK/Qdhul1EDicG8dcP8t3s1Ca7vLkG7YtzN71h3VzDn7SIozWVIBkcSYmQZF6ARQMMvwzsJeeVz3OhBwUS5sDaI9saLn/9mvGXbDL2Y5OKNoTSRNdYmBkPAFDix+LvBs902z96HKsq9B49zOS6xmPeNxVxfBxe4h/oe0Y1acNpzJGHjns40DgYFosfpxgqsBRJE3EkWqrWHqO56a0MTw6tr9jOmQfGXawT63zXaPoPa+oUg/QONmz+NrbaI3WgsVCzH06DBXYVY78Grp8vM23nTZvPHl9Gti3pNZ09niaEI7WaHk2Y8jt1TV/Rb41fZbBXQRyUOW7+GJelRXBy3xT/WY/cW2IZ6wRmTQjWDBYJC6HwDcQ5oxzj+MWQiIowMYYC8Zjm6NS1Uu/5MCVsJ+70iMnlk904+zhIp1BunojOanS02AU=
+  file:
+    - docker-util
+    - docker-util.sha256
+  skip_cleanup: true
+  on:
+    tags: true
