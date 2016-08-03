@@ -6,8 +6,8 @@ env:
   - GOOS=linux
 
 go:
-- 1.5
-- 1.6
+  - 1.5
+  - 1.6
 
 script:
   - go test -v --ldflags '-extldflags "-static"' ./...
