@@ -18,11 +18,18 @@ group are optional.
   ],
   "templates": [
     {
-      "templatePath": "/tests/test.tpl",
+      "templatePath": "/tests/test1.tpl",
       "destPath": "/tests/dest/mytemplate.txt",
       "fileMode": "0700",
       "owner": "root",
       "group": "root"
+    },
+    {
+      "templatePath": "/tests/test2.tpl",
+      "destPath": "/tests/dest/mytemplate2.txt",
+      "fileMode": "0755",
+      "owner": "10000",
+      "group": "10000"
     }
   ]
 }
