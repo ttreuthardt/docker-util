@@ -1,0 +1,6 @@
+FROM scratch
+
+COPY docker-util /
+COPY tests/ /tests
+
+ENTRYPOINT ["/docker-util", "-config", "/tests/config.json"]
