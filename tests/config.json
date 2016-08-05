@@ -7,13 +7,6 @@
       "templatePath": "./tests/test.tpl",
       "destPath": "./tests/dest/mytemplate.txt",
       "fileMode": "0700"
-    },
-    {
-      "templatePath": "./tests/test.tpl",
-      "destPath": "./tests/dest/mytemplate2.txt",
-      "fileMode": "0700",
-      "owner": "20000",
-      "group": "22000"
     }
   ]
 }
