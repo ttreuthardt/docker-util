@@ -3,8 +3,6 @@ FROM busybox
 COPY docker-util /
 COPY tests/ /tests
 
-RUN chown -R 10000 /tests
+RUN chmod +x /tests/entrypoint.sh
 
-USER 10000
-
-ENTRYPOINT ["/docker-util", "-config", "/tests/config.json"]
+ENTRYPOINT ["/tests/entrypoint.sh"]
