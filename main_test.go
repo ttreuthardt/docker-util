@@ -11,23 +11,28 @@ import (
 	"testing"
 )
 
-func TestEnvVarPopulation(t *testing.T) {
-	config := Config{}
+var (
+	config      = Config{}
+	envVarValue = "foobar"
+)
 
-	os.Setenv("MY_TEST_VAR", "test")
-
+func init() {
+	os.Setenv("MY_TEST_VAR", envVarValue)
 	config.addEnvVar("MY_TEST_VAR")
+}
+
+func TestEnvVarPopulation(t *testing.T) {
 	ctx, _ := newContext(&config)
 
-	if ctx.Env["MY_TEST_VAR"] != "test" {
-		t.Fatalf("test issue with '%s'\n", ctx.Env["MY_TEST_VAR"])
+	if ctx.Env["MY_TEST_VAR"] != envVarValue {
+		t.Errorf("test issue with '%s'", ctx.Env["MY_TEST_VAR"])
 	}
 }
 
 func TestEnvVarPopulation_not_defined(t *testing.T) {
-	config := Config{}
-	config.addEnvVar("NOT_EXISTING_VAR")
-	_, err := newContext(&config)
+	myconfig := Config{}
+	myconfig.addEnvVar("NOT_EXISTING_VAR")
+	_, err := newContext(&myconfig)
 
 	if err == nil {
 		t.Error("Error expected for undefined env var")
@@ -42,13 +47,6 @@ func TestTemplate(t *testing.T) {
 	testTplPath3 := "./tests/tmp/mytemplate3.txt"
 	defer os.RemoveAll(filepath.Dir(testTplPath1))
 
-	envVarValue := "foobar"
-
-	os.Setenv("MY_TEST_VAR", envVarValue)
-
-	config := Config{}
-	config.addEnvVar("MY_TEST_VAR")
-
 	currentUser, err := user.Current()
 	if err != nil {
 		t.Errorf("could not lookup current user, error: %v", err)
@@ -56,6 +54,7 @@ func TestTemplate(t *testing.T) {
 
 	currentGroup, err := lookupGroupById(currentUser.Gid)
 
+	config.clearTemplates()
 	config.addTemplate("./tests/test.tpl", testTplPath1, currentUser.Username, currentGroup.Name, "")
 	config.addTemplate("./tests/test.tpl", testTplPath2, currentUser.Username, currentGroup.Name, "0600")
 	config.addTemplate("./tests/test.tpl", testTplPath3, currentUser.Uid, currentGroup.Gid, "0750")
@@ -81,12 +80,69 @@ func TestTemplate(t *testing.T) {
 	assertFileOwnerGroup(testTplPath3, currentUser.Uid, currentGroup.Gid, t)
 }
 
+func TestTemplate_notExistingOwnerGroup(t *testing.T) {
+	testTplPath1 := "./tests/tmp/mytemplate1.txt"
+	defer os.RemoveAll(filepath.Dir(testTplPath1))
+
+	config.clearTemplates()
+	config.addTemplate("./tests/test.tpl", testTplPath1, "notExistingUser", "notExistingGroup", "")
+	ctx, _ := newContext(&config)
+
+	err := generateTemplates(config.Templates, ctx)
+	if err == nil {
+		t.Error("error expected")
+	} else if !strings.Contains(err.Error(), "notExistingUser") {
+		t.Errorf("error should contain notExistingUser, error: %s", err.Error())
+	}
+
+	config.clearTemplates()
+	config.addTemplate("./tests/test.tpl", testTplPath1, "", "notExistingGroup", "")
+	ctx, _ = newContext(&config)
+
+	err = generateTemplates(config.Templates, ctx)
+	if err == nil {
+		t.Error("error expected")
+	} else if !strings.Contains(err.Error(), "notExistingGroup") {
+		t.Errorf("error should contain notExistingGroup, error: %s", err.Error())
+	}
+}
+
+func TestTemplate_invalidFileMode(t *testing.T) {
+	testTplPath1 := "./tests/tmp/mytemplate1.txt"
+	defer os.RemoveAll(filepath.Dir(testTplPath1))
+
+	config.clearTemplates()
+	config.addTemplate("./tests/test.tpl", testTplPath1, "", "", "99999")
+	ctx, _ := newContext(&config)
+
+	err := generateTemplates(config.Templates, ctx)
+	if err == nil {
+		t.Error("error expected")
+	} else if !strings.Contains(err.Error(), "99999") {
+		t.Errorf("error should contain 99999, error: %s", err.Error())
+	}
+}
+
+func TestTemplate_chmodError(t *testing.T) {
+	testTplPath1 := "./tests/tmp/mytemplate1.txt"
+	defer os.RemoveAll(filepath.Dir(testTplPath1))
+
+	config.clearTemplates()
+	config.addTemplate("./tests/test.tpl", testTplPath1, "898989", "", "")
+	ctx, _ := newContext(&config)
+
+	err := generateTemplates(config.Templates, ctx)
+	if err == nil {
+		t.Error("error expected")
+	} else if !strings.Contains(err.Error(), "898989") {
+		t.Errorf("error should contain 898989, error: %s", err.Error())
+	}
+}
+
 func TestMyMain(t *testing.T) {
 	testTplPath1 := "./tests/dest/mytemplate.txt"
 	defer os.RemoveAll(filepath.Dir(testTplPath1))
 
-	envVarValue := "foobar"
-	os.Setenv("MY_TEST_VAR", envVarValue)
 	os.Args = append(os.Args, "-config=tests/config.json")
 
 	main()

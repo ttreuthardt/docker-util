@@ -154,7 +154,7 @@ func handleOwnerAndGroup(file *os.File, template Template) error {
 			if err == nil {
 				uid, _ = strconv.Atoi(owner.Uid)
 			} else {
-				log.Printf("User %s not found chown to curent user, error: %v", template.Owner, err)
+				return fmt.Errorf("User %s not found chown to curent user, error: %v", template.Owner, err)
 			}
 		}
 	}
@@ -167,7 +167,7 @@ func handleOwnerAndGroup(file *os.File, template Template) error {
 			if err == nil {
 				gid, _ = strconv.Atoi(group.Gid)
 			} else {
-				log.Printf("Group %s not found chown to curent users primary group, error: %v", template.Group, err)
+				return fmt.Errorf("Group %s not found chown to curent users primary group, error: %v", template.Group, err)
 			}
 		}
 	}
@@ -198,10 +198,6 @@ func isNumber(id string) bool {
 }
 
 func isValidFileMode(fileMode string) bool {
-	match, err := regexp.MatchString("^[0-7]{4}$", fileMode)
-	if err != nil {
-		log.Fatal("error while checking file mode")
-		return false
-	}
+	match, _ := regexp.MatchString("^[0-7]{4}$", fileMode)
 	return match
 }

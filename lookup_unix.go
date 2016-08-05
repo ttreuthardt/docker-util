@@ -26,10 +26,7 @@ func lookupGroupById(groupId string) (*Group, error) {
 		return nil, fmt.Errorf("Given gid string could not be converted into an int: %v", err)
 	}
 	/* wrapper_getgrgid has to be used to avoid C.gid_t as it does not work in linux */
-	c_grp, err := C.wrapper_getgrgid(C.int(gid))
-	if err != nil {
-		return nil, fmt.Errorf("error while lookup group %s: %v", groupId, err)
-	}
+	c_grp, _ := C.wrapper_getgrgid(C.int(gid))
 
 	if c_grp == nil {
 		return nil, fmt.Errorf("Unknown group id %s", groupId)
@@ -42,10 +39,7 @@ func lookupGroupByName(groupName string) (*Group, error) {
 	c_groupName := C.CString(groupName)
 	defer C.free(unsafe.Pointer(c_groupName))
 
-	c_grp, err := C.getgrnam(c_groupName)
-	if err != nil {
-		return nil, fmt.Errorf("error while lookup group %s: %v", groupName, err)
-	}
+	c_grp, _ := C.getgrnam(c_groupName)
 
 	if c_grp == nil {
 		return nil, fmt.Errorf("Unknown group %s", groupName)

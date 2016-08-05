@@ -25,6 +25,10 @@ func (c *Config) addEnvVar(envVarName string) {
 	c.Envvars = append(c.Envvars, envVarName)
 }
 
+func (c *Config) clearTemplates() {
+	c.Templates = make([]Template, 0)
+}
+
 func (c *Config) addTemplate(templatePath, destPath, owner, group, fileMode string) error {
 
 	for _, t := range c.Templates {
