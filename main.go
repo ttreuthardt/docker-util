@@ -9,6 +9,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"regexp"
 	"strconv"
 	"text/template"
 )
@@ -124,6 +125,11 @@ func writeTemplate(templatePath string, writer io.Writer, ctx *Context) error {
 
 func handlePermission(file *os.File, template Template) error {
 	if template.FileMode != "" {
+
+		if !isValidFileMode(template.FileMode) {
+			return fmt.Errorf("Invalid file mode %s for template %s", template.FileMode, template.DestPath)
+		}
+
 		if value, err := strconv.ParseUint(template.FileMode, 0, 32); err == nil {
 			fileMode := os.FileMode(value)
 			err := os.Chmod(file.Name(), fileMode)
@@ -137,42 +143,40 @@ func handlePermission(file *os.File, template Template) error {
 }
 
 func handleOwnerAndGroup(file *os.File, template Template) error {
-	var userId, groupId string
-
-	currentUser, err := user.Current()
-	if err != nil {
-		log.Printf("Could not lookup current user we are probably running in a scratch image, skipping chown, error: %v", err)
-		return nil
-	}
-
-	userId = currentUser.Uid
-	groupId = currentUser.Gid
+	uid := os.Geteuid()
+	gid := os.Getegid()
 
 	if template.Owner != "" {
-		owner, err := user.Lookup(template.Owner)
-		if err == nil {
-			userId = owner.Uid
+		if isNumber(template.Owner) {
+			uid, _ = strconv.Atoi(template.Owner)
 		} else {
-			log.Printf("User %s not found chown to curent user, error: %v", template.Owner, err)
+			owner, err := user.Lookup(template.Owner)
+			if err == nil {
+				uid, _ = strconv.Atoi(owner.Uid)
+			} else {
+				log.Printf("User %s not found chown to curent user, error: %v", template.Owner, err)
+			}
 		}
 	}
 
 	if template.Group != "" {
-		group, err := LookupGroupByName(template.Group)
-		if err == nil {
-			groupId = group.Gid
+		if isNumber(template.Group) {
+			gid, _ = strconv.Atoi(template.Group)
 		} else {
-			log.Printf("Group %s not found chown to curent users primary group, error: %v", template.Group, err)
+			group, err := LookupGroupByName(template.Group)
+			if err == nil {
+				gid, _ = strconv.Atoi(group.Gid)
+			} else {
+				log.Printf("Group %s not found chown to curent users primary group, error: %v", template.Group, err)
+			}
 		}
 	}
 
-	uid, _ := strconv.Atoi(userId)
-	gid, _ := strconv.Atoi(groupId)
-
-	err = file.Chown(uid, gid)
+	err := file.Chown(uid, gid)
 	if err != nil {
 		return fmt.Errorf("Chown with uid %d and gid %d failed for template destPath %s, error: %v", uid, gid, template.DestPath, err)
 	}
+
 	return nil
 }
 
@@ -186,4 +190,18 @@ func createFolderStructure(templatePath string) error {
 		}
 	}
 	return nil
+}
+
+func isNumber(id string) bool {
+	_, err := strconv.Atoi(id)
+	return err == nil
+}
+
+func isValidFileMode(fileMode string) bool {
+	match, err := regexp.MatchString("^[0-7]{4}$", fileMode)
+	if err != nil {
+		log.Fatal("error while checking file mode")
+		return false
+	}
+	return match
 }

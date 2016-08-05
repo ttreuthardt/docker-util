@@ -5,7 +5,9 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"syscall"
 	"testing"
 )
 
@@ -37,6 +39,7 @@ func TestEnvVarPopulation_not_defined(t *testing.T) {
 func TestTemplate(t *testing.T) {
 	testTplPath1 := "./tests/tmp/mytemplate1.txt"
 	testTplPath2 := "./tests/tmp/mytemplate2.txt"
+	testTplPath3 := "./tests/tmp/mytemplate3.txt"
 	defer os.RemoveAll(filepath.Dir(testTplPath1))
 
 	envVarValue := "foobar"
@@ -55,6 +58,7 @@ func TestTemplate(t *testing.T) {
 
 	config.addTemplate("./tests/test.tpl", testTplPath1, currentUser.Username, currentGroup.Name, "")
 	config.addTemplate("./tests/test.tpl", testTplPath2, currentUser.Username, currentGroup.Name, "0600")
+	config.addTemplate("./tests/test.tpl", testTplPath3, currentUser.Uid, currentGroup.Gid, "0750")
 	ctx, err := newContext(&config)
 	if err != nil {
 		t.Errorf("newContext error: %v", err)
@@ -67,7 +71,14 @@ func TestTemplate(t *testing.T) {
 
 	assertFileExistsAndContains(testTplPath1, envVarValue, t)
 	assertFileExistsAndContains(testTplPath2, envVarValue, t)
+	assertFileExistsAndContains(testTplPath3, envVarValue, t)
+
 	assertFileMode(testTplPath2, 0600, t)
+	assertFileMode(testTplPath3, 0750, t)
+
+	assertFileOwnerGroup(testTplPath1, currentUser.Uid, currentGroup.Gid, t)
+	assertFileOwnerGroup(testTplPath2, currentUser.Uid, currentGroup.Gid, t)
+	assertFileOwnerGroup(testTplPath3, currentUser.Uid, currentGroup.Gid, t)
 }
 
 func TestMyMain(t *testing.T) {
@@ -82,6 +93,34 @@ func TestMyMain(t *testing.T) {
 
 	assertFileExistsAndContains(testTplPath1, envVarValue, t)
 	assertFileMode(testTplPath1, 0700, t)
+}
+
+func TestIsValidFileMode(t *testing.T) {
+
+	type fileModeTests struct {
+		input string
+		valid bool
+	}
+
+	var fileModes = []fileModeTests{
+		fileModeTests{input: "0777", valid: true},
+		fileModeTests{input: "0123", valid: true},
+		fileModeTests{input: "0755", valid: true},
+		fileModeTests{input: "2755", valid: true},
+		fileModeTests{input: "7755", valid: true},
+		fileModeTests{input: "8755", valid: false},
+		fileModeTests{input: "", valid: false},
+		fileModeTests{input: "1", valid: false},
+		fileModeTests{input: "12", valid: false},
+		fileModeTests{input: "123", valid: false},
+		fileModeTests{input: "12345", valid: false},
+	}
+
+	for _, value := range fileModes {
+		if isValidFileMode(value.input) != value.valid {
+			t.Errorf("File mode %s should be %t", value.input, value.valid)
+		}
+	}
 }
 
 func assertFileExistsAndContains(file, content string, t *testing.T) {
@@ -107,5 +146,23 @@ func assertFileMode(file string, fileMode os.FileMode, t *testing.T) {
 
 	if fileStat.Mode() != fileMode {
 		t.Errorf("unexpected mode %v for file %s", fileStat.Mode().Perm(), file)
+	}
+}
+
+func assertFileOwnerGroup(file, expectedUserId, expectedGroupId string, t *testing.T) {
+	fileStat, err := os.Stat(file)
+	if err != nil {
+		t.Errorf("File %s stat error %v", file, err)
+	}
+
+	uid := fileStat.Sys().(*syscall.Stat_t).Uid
+	gid := fileStat.Sys().(*syscall.Stat_t).Gid
+
+	userId := strconv.FormatUint(uint64(uid), 10)
+	groupId := strconv.FormatUint(uint64(gid), 10)
+
+	if expectedUserId != userId || expectedGroupId != groupId {
+		t.Errorf("uid/gid of file %s is %s/%s but expected is %s/%s", file, userId, groupId, expectedUserId,
+			expectedUserId)
 	}
 }
